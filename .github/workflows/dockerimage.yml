@@ -31,12 +31,10 @@ jobs:
       - name: Update Function
         uses: kfur/ibm-fn-cli-action@master
         env:
-          CF_API_ENDPOINT: ${{secrets.CF_API_ENDPOINT}}
-          ORG: ${{secrets.CF_ORG}}
-          SPACE: ${{secrets.CF_SPACE}}
           USERNAME: ${{secrets.CF_USERNAME}}
           PASSWORD: ${{secrets.CF_PASSWORD}}
           CF_DOCKER_IMAGE: ponyboy/gallery-dl-bot:latest
+          CF_REGION: eu-de
           APP_NAME: gallery-dl-bot
           MAIN_SCRIPT_NAME: main.py
         
