@@ -1,0 +1,3 @@
+pyTelegramBotAPI==3.6.7
+gallery_dl==1.13.3
+urlextract==0.14.0
