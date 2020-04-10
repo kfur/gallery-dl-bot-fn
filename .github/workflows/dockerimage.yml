@@ -1,0 +1,42 @@
+name: Docker Image CI/CD
+
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - '**.md'
+
+  repository_dispatch:
+    types: [production-deploy]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_TAG: ponyboy/gallery-dl-bot:latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Build the Docker image
+        run: |
+          docker build . --file Dockerfile --tag $DOCKER_TAG
+      - name: Push to Dockerhub registry
+        run: |
+          docker login hub.docker.com --username ${{secrets.DOCKER_REGISTRY_USERNAME}} --password ${{secrets.DOCKER_REGISTRY_PASSWORD}}
+          docker push $DOCKER_TAG
+
+      - name: Update Function
+        uses: kfur/ibm-fn-cli-action@master
+        env:
+          CF_API_ENDPOINT: ${{secrets.CF_API_ENDPOINT}}
+          ORG: ${{secrets.CF_ORG}}
+          SPACE: ${{secrets.CF_SPACE}}
+          USERNAME: ${{secrets.CF_USERNAME}}
+          PASSWORD: ${{secrets.CF_PASSWORD}}
+          CF_DOCKER_IMAGE: ponyboy/gallery-dl-bot:latest
+          APP_NAME: gallery-dl-bot
+          MAIN_SCRIPT_NAME: main.py
+        
