@@ -47,6 +47,7 @@ config.load()  # load default config files
 config.set(("extractor",), "image-range", "1")
 config.set(("extractor",), "download", False)
 config.set(("extractor",), "timeout", 10)
+config.set(("extractor",), "verify", False)
 
 url_extractor = URLExtract()
 
