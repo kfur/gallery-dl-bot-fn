@@ -4,6 +4,9 @@ from gallery_dl import config, job, exception
 from urlextract import URLExtract
 import re
 
+class NoUrlError(Exception):
+    pass
+
 class GetUrlJob(job.Job):
     """Print download urls"""
     maxdepth = 1
@@ -86,8 +89,18 @@ def main(params):
                     return
                 else:
                     config.set(("extractor",), "image-range", start+'-'+end)
-
-        _main(bot, chat_id, msg_txt)
+        try:
+            _main(bot, chat_id, msg_txt)
+        except NoUrlError:
+            if msg['chat']['type'] == 'private':
+                if cmd is not None:
+                    if cmd == 'all':
+                        bot.send_message(chat_id, 'Wrong command, correct example: /all manga.com/chapter1')
+                    elif cmd == 'p':
+                        bot.send_message(chat_id, 'Wrong command, correct example: /p 3-10 manga.com/chapter1')
+                else:
+                    bot.send_message(chat_id, 'Couldn\'t find any url in message, send me one')
+            print('No url in message')
     except Exception as e:
         if msg['chat']['type'] == 'private':
             bot.send_message(chat_id, 'ERROR: ' + str(e))
@@ -98,7 +111,7 @@ def main(params):
 def _main(bot, chat_id, msg_txt):
     urls = url_extractor.find_urls(msg_txt)
     if len(urls) == 0:
-        return
+        raise NoUrlError()
     direct_urls = get_img_links(urls[0])
     for u in direct_urls:
         try:
