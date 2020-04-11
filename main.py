@@ -3,8 +3,12 @@ import telebot
 from gallery_dl import config, job, exception
 from urlextract import URLExtract
 import re
+import signal
 
 class NoUrlError(Exception):
+    pass
+
+class ExecutionTimeout(Exception):
     pass
 
 class GetUrlJob(job.Job):
@@ -52,10 +56,21 @@ def cmd_from_message(message):
 
     return cmd
 
+
 def get_img_links(url):
     j = GetUrlJob(url)
     j.run()
     return j.urls
+
+
+def timeout_handler():
+    raise ExecutionTimeout()
+
+
+def setup_timeout():
+    signal.signal(signal.SIGALRM, timeout_handler)
+    signal.alarm(50)
+
 
 def main(params):
     try:
@@ -90,6 +105,7 @@ def main(params):
                 else:
                     config.set(("extractor",), "image-range", start+'-'+end)
         try:
+            setup_timeout()
             _main(bot, chat_id, msg_txt)
         except NoUrlError:
             if msg['chat']['type'] == 'private':
@@ -101,6 +117,8 @@ def main(params):
                 else:
                     bot.send_message(chat_id, 'Couldn\'t find any url in message, send me one')
             print('No url in message')
+    except ExecutionTimeout:
+        print('Work timeout')
     except Exception as e:
         if msg['chat']['type'] == 'private':
             bot.send_message(chat_id, 'ERROR: ' + str(e))
