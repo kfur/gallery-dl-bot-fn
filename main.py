@@ -80,13 +80,13 @@ def main(params):
                 pic_range_match = pic_range_re.search(msg_txt)
                 if pic_range_match is None:
                     bot.send_message(chat_id, 'Wrong command, correct example: /p 3-10 manga.com/chapter1')
-                    return
+                    return {}
                 start, _, end = pic_range_match.groups()
                 if end is None:
                     config.set(("extractor",), "image-range", start)
                 elif int(start) > int(end):
                     bot.send_message(chat_id, 'Start number bigger then end, correct example: /p 3-10 manga.com/chapter1')
-                    return
+                    return {}
                 else:
                     config.set(("extractor",), "image-range", start+'-'+end)
         try:
