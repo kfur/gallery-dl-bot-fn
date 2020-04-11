@@ -2,6 +2,7 @@
 import telebot
 from gallery_dl import config, job, exception
 from urlextract import URLExtract
+import re
 
 class GetUrlJob(job.Job):
     """Print download urls"""
@@ -32,17 +33,26 @@ class GetUrlJob(job.Job):
 
 
 config.load()  # load default config files
-config.set(("extractor",), "image-range", "1-10")
+config.set(("extractor",), "image-range", "1")
 config.set(("extractor",), "download", False)
 config.set(("extractor",), "timeout", 2)
 
 url_extractor = URLExtract()
 
+# get cmd name from message
+def cmd_from_message(message):
+    cmd = None
+    if 'entities' in message:
+        for e in message['entities']:
+            if e['type'] == 'bot_command':
+                cmd = message['text'][e['offset'] + 1:e['length']]
+
+    return cmd
+
 def get_img_links(url):
     j = GetUrlJob(url)
     j.run()
     return j.urls
-
 
 def main(params):
     try:
@@ -56,6 +66,27 @@ def main(params):
         if msg_txt == '/start':
             bot.send_message(chat_id, 'Send me url to image and i\'ll upload it to telegram')
             return {}
+        cmd = cmd_from_message(msg)
+        if cmd is not None:
+            if cmd == 'all':
+                # retrieve all avalibale links
+                config.unset(("extractor",), "image-range")
+            elif cmd == 'p':
+                # granular image links extraction
+                pic_range_re = re.compile('([0-9]+)(-([0-9]+))?')
+                pic_range_match = pic_range_re.search(msg_txt)
+                if pic_range_match is None:
+                    bot.send_message(chat_id, 'Wrong command, correct example: /p 3-10 manga.com/chapter1')
+                    return
+                start, _, end = pic_range_match.groups()
+                if end is None:
+                    config.set(("extractor",), "image-range", start)
+                elif int(start) > int(end):
+                    bot.send_message(chat_id, 'Start number bigger then end, correct example: /p 3-10 manga.com/chapter1')
+                    return
+                else:
+                    config.set(("extractor",), "image-range", start+'-'+end)
+
         _main(bot, chat_id, msg_txt)
     except Exception as e:
         if msg['chat']['type'] == 'private':
