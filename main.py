@@ -46,7 +46,7 @@ class GetUrlJob(job.Job):
 config.load()  # load default config files
 config.set(("extractor",), "image-range", "1")
 config.set(("extractor",), "download", False)
-config.set(("extractor",), "timeout", 2)
+config.set(("extractor",), "timeout", 10)
 
 url_extractor = URLExtract()
 
