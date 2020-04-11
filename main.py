@@ -4,12 +4,16 @@ from gallery_dl import config, job, exception
 from urlextract import URLExtract
 import re
 import signal
+import time
+
 
 class NoUrlError(Exception):
     pass
 
+
 class ExecutionTimeout(Exception):
     pass
+
 
 class GetUrlJob(job.Job):
     """Print download urls"""
@@ -126,6 +130,7 @@ def main(params):
 
     return {}
 
+
 def _main(bot, chat_id, msg_txt):
     urls = url_extractor.find_urls(msg_txt)
     if len(urls) == 0:
@@ -134,6 +139,7 @@ def _main(bot, chat_id, msg_txt):
     for u in direct_urls:
         try:
             bot.send_photo(chat_id, u)
+            time.sleep(0.1)
         except Exception as e:
             print('ERROR: ', e)
     return None
