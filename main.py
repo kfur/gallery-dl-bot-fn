@@ -68,7 +68,7 @@ def get_img_links(url):
     return j.urls
 
 
-def timeout_handler():
+def timeout_handler(signum, frame):
     raise ExecutionTimeout()
 
 
@@ -141,6 +141,9 @@ def _main(bot, chat_id, msg_txt):
         try:
             bot.send_photo(chat_id, u)
             time.sleep(0.1)
+        except ExecutionTimeout:
+            raise
         except Exception as e:
             print('ERROR: ', e)
     return None
+
