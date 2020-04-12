@@ -130,6 +130,12 @@ async def _main_task(params):
         except TelegramAPIError as e:
             print(e.__class__.__name__ + ': ' + str(e))
         raise
+    except exception.NoExtractorError:
+        try:
+            if msg['chat']['type'] == 'private':
+                await bot.send_message(chat_id, 'ERROR: Unsupported URL')
+        except TelegramAPIError as e:
+            print(e.__class__.__name__ + ': ' + str(e))
     except Exception as e:
         try:
             if msg['chat']['type'] == 'private':
