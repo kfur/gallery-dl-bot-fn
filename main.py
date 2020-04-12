@@ -5,6 +5,7 @@ from urlextract import URLExtract
 import re
 import signal
 import time
+import traceback
 
 
 class NoUrlError(Exception):
@@ -126,8 +127,11 @@ def main(params):
         print('Work timeout')
     except Exception as e:
         if msg['chat']['type'] == 'private':
-            bot.send_message(chat_id, 'ERROR: ' + str(e))
-        print('ERROR: ', e)
+            try:
+                bot.send_message(chat_id, 'ERROR: ' + str(e))
+            except Exception as e:
+                print(e)
+        traceback.print_exc()
 
     return {}
 
