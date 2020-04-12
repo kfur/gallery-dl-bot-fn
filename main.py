@@ -1,18 +1,14 @@
 
-import telebot
+from aiogram.bot import Bot
+from aiogram.utils.exceptions import TelegramAPIError
+import asyncio
 from gallery_dl import config, job, exception
 from urlextract import URLExtract
 import re
-import signal
-import time
 import traceback
 
 
 class NoUrlError(Exception):
-    pass
-
-
-class ExecutionTimeout(Exception):
     pass
 
 
@@ -52,6 +48,7 @@ config.set(("extractor",), "verify", False)
 
 url_extractor = URLExtract()
 
+
 # get cmd name from message
 def cmd_from_message(message):
     cmd = None
@@ -63,33 +60,37 @@ def cmd_from_message(message):
     return cmd
 
 
-def get_img_links(url):
+async def get_img_links(url):
+    return await asyncio.get_event_loop().run_in_executor(None, _get_img_links, url)
+
+
+def _get_img_links(url):
     j = GetUrlJob(url)
     j.run()
     return j.urls
 
 
-def timeout_handler(signum, frame):
-    raise ExecutionTimeout()
-
-
-def setup_timeout():
-    signal.signal(signal.SIGALRM, timeout_handler)
-    signal.alarm(50)
-
-
-def main(params):
+async def _main(params):
+    task = asyncio.wait_for(_main_task(params), 50)
     try:
-        bot = telebot.TeleBot(params['BOT_TOKEN'])
+        await task
+    except asyncio.TimeoutError:
+        print('Request timeout')
+    except Exception:
+        traceback.print_exc()
+
+async def _main_task(params):
+    try:
+        bot = Bot(params['BOT_TOKEN'])
         msg = params['message']
         chat_id = msg['chat']['id']
         msg_txt = msg.get('text')
         if not msg_txt:
-            bot.send_message(chat_id, 'Please send me url to image')
-            return {}
+            await bot.send_message(chat_id, 'Please send me url to image')
+            return
         if msg_txt == '/start':
-            bot.send_message(chat_id, 'Send me url to image and i\'ll upload it to telegram')
-            return {}
+            await bot.send_message(chat_id, 'Send me url to image and i\'ll upload it to telegram')
+            return
         cmd = cmd_from_message(msg)
         if cmd is not None:
             if cmd == 'all':
@@ -100,54 +101,58 @@ def main(params):
                 pic_range_re = re.compile('([0-9]+)(-([0-9]+))?')
                 pic_range_match = pic_range_re.search(msg_txt)
                 if pic_range_match is None:
-                    bot.send_message(chat_id, 'Wrong command, correct example: /p 3-10 manga.com/chapter1')
-                    return {}
+                    await bot.send_message(chat_id, 'Wrong command, correct example: /p 3-10 manga.com/chapter1')
+                    return
                 start, _, end = pic_range_match.groups()
                 if end is None:
                     config.set(("extractor",), "image-range", start)
                 elif int(start) > int(end):
-                    bot.send_message(chat_id, 'Start number bigger then end, correct example: /p 3-10 manga.com/chapter1')
-                    return {}
+                    await bot.send_message(chat_id, 'Start number bigger then end, correct example: /p 3-10 manga.com/chapter1')
+                    return
                 else:
                     config.set(("extractor",), "image-range", start+'-'+end)
         try:
-            setup_timeout()
-            _main(bot, chat_id, msg_txt)
+            await handle_request(bot, chat_id, msg_txt)
         except NoUrlError:
             if msg['chat']['type'] == 'private':
                 if cmd is not None:
                     if cmd == 'all':
-                        bot.send_message(chat_id, 'Wrong command, correct example: /all manga.com/chapter1')
+                        await bot.send_message(chat_id, 'Wrong command, correct example: /all manga.com/chapter1')
                     elif cmd == 'p':
-                        bot.send_message(chat_id, 'Wrong command, correct example: /p 3-10 manga.com/chapter1')
+                        await bot.send_message(chat_id, 'Wrong command, correct example: /p 3-10 manga.com/chapter1')
                 else:
-                    bot.send_message(chat_id, 'Couldn\'t find any url in message, send me one')
+                    await bot.send_message(chat_id, 'Couldn\'t find any url in message, send me one')
             print('No url in message')
-    except ExecutionTimeout:
-        print('Work timeout')
+    except asyncio.CancelledError:
+        try:
+            if msg['chat']['type'] == 'private':
+                await bot.send_message(chat_id, 'Request timeout')
+        except TelegramAPIError as e:
+            print(e.__class__.__name__ + ': ' + str(e))
+        raise
     except Exception as e:
         try:
             if msg['chat']['type'] == 'private':
-                bot.send_message(chat_id, 'ERROR: ' + str(e))
-        except Exception as e:
-            print(e)
+                await bot.send_message(chat_id, 'ERROR: ' + str(e))
+        except TelegramAPIError as e:
+            print(e.__class__.__name__ + ': ' + str(e))
         traceback.print_exc()
 
-    return {}
 
-
-def _main(bot, chat_id, msg_txt):
+async def handle_request(bot, chat_id, msg_txt):
     urls = url_extractor.find_urls(msg_txt)
     if len(urls) == 0:
         raise NoUrlError()
-    direct_urls = get_img_links(urls[0])
+    direct_urls = await get_img_links(urls[0])
     for u in direct_urls:
         try:
-            bot.send_photo(chat_id, u)
-            time.sleep(0.1)
-        except ExecutionTimeout:
-            raise
-        except Exception as e:
-            print('ERROR: ', e)
+            await bot.send_photo(chat_id, u)
+            await asyncio.sleep(0.1)
+        except TelegramAPIError as e:
+            print(e.__class__.__name__ + ': ' + str(e))
     return None
 
+
+def main(params):
+    asyncio.get_event_loop().run_until_complete(_main(params))
+    return {}
