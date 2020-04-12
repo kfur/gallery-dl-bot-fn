@@ -16,7 +16,7 @@ jobs:
 
     runs-on: ubuntu-latest
     env:
-      DOCKER_TAG: ponyboy/gallery-dl-bot:latest
+      DOCKER_TAG: ponyboy/gallery-dl-bot-fn:latest
 
     steps:
       - uses: actions/checkout@v1
@@ -33,8 +33,8 @@ jobs:
         env:
           USERNAME: ${{secrets.CF_USERNAME}}
           PASSWORD: ${{secrets.CF_PASSWORD}}
-          CF_DOCKER_IMAGE: ponyboy/gallery-dl-bot:latest
+          CF_DOCKER_IMAGE: ponyboy/gallery-dl-bot-fn:latest
           CF_REGION: eu-de
-          APP_NAME: gallery-dl-bot
+          APP_NAME: gallery-dl-bot-fn
           MAIN_SCRIPT_NAME: main.py
         
