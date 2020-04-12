@@ -126,11 +126,11 @@ def main(params):
     except ExecutionTimeout:
         print('Work timeout')
     except Exception as e:
-        if msg['chat']['type'] == 'private':
-            try:
+        try:
+            if msg['chat']['type'] == 'private':
                 bot.send_message(chat_id, 'ERROR: ' + str(e))
-            except Exception as e:
-                print(e)
+        except Exception as e:
+            print(e)
         traceback.print_exc()
 
     return {}
