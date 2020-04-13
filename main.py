@@ -2,7 +2,7 @@
 from aiogram.bot import Bot
 from aiogram.utils.exceptions import TelegramAPIError
 import asyncio
-from gallery_dl import config, job, exception
+from gallery_dl import config, job, exception, __version__ as gdl_version
 from urlextract import URLExtract
 import re
 import traceback
@@ -90,6 +90,9 @@ async def _main_task(params):
             return
         if msg_txt == '/start':
             await bot.send_message(chat_id, 'Send me url to image and i\'ll upload it to telegram')
+            return
+        if msg_txt == '/version':
+            await bot.send_message(chat_id, 'gallery-dl version: ' + gdl_version)
             return
         cmd = cmd_from_message(msg)
         if cmd is not None:
