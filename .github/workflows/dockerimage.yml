@@ -19,21 +19,24 @@ jobs:
       DOCKER_TAG: ponyboy/gallery-dl-bot-fn:latest
 
     steps:
+      - name: Gen Docker tag
+        id: vars
+        run: echo ::set-output name=tag::$(echo ${DOCKER_TAG}:$(date +%s))
       - uses: actions/checkout@v1
       - name: Build the Docker image
         run: |
-          docker build . --file Dockerfile --tag $DOCKER_TAG
+          docker build . --file Dockerfile --tag ${{steps.vars.outputs.tag}}
       - name: Push to Dockerhub registry
         run: |
           docker login --username ${{secrets.DOCKER_REGISTRY_USERNAME}} --password ${{secrets.DOCKER_REGISTRY_PASSWORD}}
-          docker push $DOCKER_TAG
+          docker push ${{steps.vars.outputs.tag}}
 
       - name: Update Function
         uses: kfur/ibm-fn-cli-action@master
         env:
           USERNAME: ${{secrets.CF_USERNAME}}
           PASSWORD: ${{secrets.CF_PASSWORD}}
-          CF_DOCKER_IMAGE: ponyboy/gallery-dl-bot-fn:latest
+          CF_DOCKER_IMAGE: ${{steps.vars.outputs.tag}}
           CF_REGION: eu-de
           APP_NAME: gallery-dl-bot-fn
           MAIN_SCRIPT_NAME: main.py
