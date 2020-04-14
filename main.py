@@ -73,7 +73,7 @@ def _get_img_links(url):
 
 
 async def _main(params):
-    task = asyncio.wait_for(_main_task(params), 50)
+    task = asyncio.wait_for(_main_task(params), int(params['TIMEOUT']))
     try:
         await task
     except asyncio.TimeoutError:
