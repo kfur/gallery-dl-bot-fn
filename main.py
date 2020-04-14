@@ -87,6 +87,8 @@ async def _main_task(params):
         msg = params['message']
         chat_id = msg['chat']['id']
         msg_txt = msg.get('text')
+
+        print(msg)
         if not msg_txt:
             await bot.send_message(chat_id, 'Please send me url to image')
             return
