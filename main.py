@@ -6,6 +6,7 @@ from gallery_dl import config, job, exception, __version__ as gdl_version
 from urlextract import URLExtract
 import re
 import traceback
+import urllib3
 
 
 class NoUrlError(Exception):
@@ -161,7 +162,9 @@ async def handle_request(bot, chat_id, msg_txt):
             print(e.__class__.__name__ + ': ' + str(e))
     return None
 
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 def main(params):
     asyncio.get_event_loop().run_until_complete(_main(params))
     return {}
+
