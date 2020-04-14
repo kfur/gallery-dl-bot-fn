@@ -46,6 +46,7 @@ config.set(("extractor",), "image-range", "1")
 config.set(("extractor",), "download", False)
 config.set(("extractor",), "timeout", 10)
 config.set(("extractor",), "verify", False)
+config.set(("extractor",), "sleep", 0.01)
 
 url_extractor = URLExtract()
 
