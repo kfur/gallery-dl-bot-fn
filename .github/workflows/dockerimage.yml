@@ -16,7 +16,7 @@ jobs:
 
     runs-on: ubuntu-latest
     env:
-      DOCKER_TAG: ponyboy/gallery-dl-bot-fn:latest
+      DOCKER_TAG: ponyboy/gallery-dl-bot-fn
 
     steps:
       - name: Gen Docker tag
