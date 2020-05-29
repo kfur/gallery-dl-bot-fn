@@ -184,8 +184,8 @@ async def handle_request(bot, chat_id, msg_txt):
     urls = url_extractor.find_urls(msg_txt)
     if len(urls) == 0:
         raise NoUrlError()
-    direct_urls = await get_img_links(urls[0])
     async with TGAction(bot, chat_id, "upload_photo"):
+        direct_urls = await get_img_links(urls[0])
         for u in direct_urls:
             try:
                 await bot.send_photo(chat_id, u)
