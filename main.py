@@ -186,6 +186,8 @@ async def handle_request(bot, chat_id, msg_txt):
         raise NoUrlError()
     async with TGAction(bot, chat_id, "upload_photo"):
         direct_urls = await get_img_links(urls[0])
+        if len(direct_urls) == 0:
+            raise Exception('failed find photos')
         for u in direct_urls:
             try:
                 await bot.send_photo(chat_id, u)
