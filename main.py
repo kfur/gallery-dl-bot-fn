@@ -71,6 +71,7 @@ class GetUrlJob(job.Job):
 
 config.load()  # load default config files
 config.set(("extractor",), "image-range", "1")
+config.set(("extractor",), "chapter-range", "1")
 config.set(("extractor",), "download", False)
 config.set(("extractor",), "timeout", 10)
 config.set(("extractor",), "verify", False)
@@ -184,10 +185,10 @@ async def handle_request(bot, chat_id, msg_txt):
     urls = url_extractor.find_urls(msg_txt)
     if len(urls) == 0:
         raise NoUrlError()
+    direct_urls = await get_img_links(urls[0])
+    if len(direct_urls) == 0:
+        raise Exception('failed find photos')
     async with TGAction(bot, chat_id, "upload_photo"):
-        direct_urls = await get_img_links(urls[0])
-        if len(direct_urls) == 0:
-            raise Exception('failed find photos')
         for u in direct_urls:
             try:
                 await bot.send_photo(chat_id, u)
