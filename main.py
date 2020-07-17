@@ -159,6 +159,8 @@ async def _main_task(params):
                 else:
                     await bot.send_message(chat_id, 'Couldn\'t find any url in message, send me one')
             print('No url in message')
+        finally:
+            config.set(("extractor",), "image-range", "1")
     except asyncio.CancelledError:
         try:
             if msg['chat']['type'] == 'private':
