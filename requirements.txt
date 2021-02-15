@@ -1,3 +1,3 @@
 aiogram==2.8
-gallery_dl==1.16.4
+gallery_dl==1.16.5
 urlextract==0.14.0
