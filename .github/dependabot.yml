@@ -1,0 +1,17 @@
+version: 2
+updates:
+- package-ecosystem: pip
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "03:00"
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: gallery-dl
+    versions:
+    - 1.17.2
+  - dependency-name: aiogram
+    versions:
+    - 2.11.2
+    - "2.12"
+    - 2.12.1
